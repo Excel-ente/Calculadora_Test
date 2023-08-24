@@ -185,7 +185,7 @@ JAZZMIN_SETTINGS = {
 
     # Additional links to include in the user menu on the top right ("app" url type is not allowed)
     "usermenu_links": [
-        {"name": "Ayuda", "url": "https://excel-ente.net/ayuda/calculadora-de-costos", "new_window": True},
+        {"name": "Ayuda", "url": "https://excel-ente.net/contact", "new_window": True},
         {"model": "auth.user"}
     ],
 
