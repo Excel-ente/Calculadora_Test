@@ -33,10 +33,24 @@ def generar_presupuesto(modeladmin, request, queryset):
     configuracion = get_configuracion(usuario)
 
     if configuracion:
+
         nombre_empresa = configuracion.NOMBRE_EMPRESA
         direccion_empresa = configuracion.DIRECCION
         telefono_empresa = configuracion.TELEFONO
         email_empresa = configuracion.EMAIL
+
+        if not nombre_empresa:
+            nombre_empresa = "Detalle de Receta"
+
+        if not direccion_empresa:
+            direccion_empresa = ""
+
+        if not telefono_empresa:
+            telefono_empresa = ""
+        
+        if not email_empresa:
+            email_empresa = ""
+        
         logo_path = configuracion.LOGO.path if configuracion.LOGO else None
 
     

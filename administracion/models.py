@@ -79,7 +79,7 @@ class Proveedor(models.Model):
 # ------------------------------------------------------------------
 class Insumo(models.Model):
     CATEGORIA = models.ForeignKey(Categoria,on_delete=models.CASCADE,blank=True,null=True)
-    PRODUCTO = models.CharField(max_length=120, null=False, blank=False,unique=True)
+    PRODUCTO = models.CharField(max_length=120, null=False, blank=False)
     PROVEEDOR=models.ForeignKey(Proveedor,on_delete=models.CASCADE,blank=True,null=True)
     DETALLE = models.TextField(null=True, blank=True)
     STOCK = models.IntegerField(default=0,null=True,blank=True)
