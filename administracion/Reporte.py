@@ -8,22 +8,37 @@ import os
 import locale
 from django.core.files.storage import default_storage
 
+def get_configuracion(usuario):
+    # Buscar la configuración activa del usuario
+    configuracion = Configuracion.objects.filter(USER=usuario, estado=True).first()
+
+    # Si no hay configuración activa, buscar una inactiva
+    if not configuracion:
+        configuracion = Configuracion.objects.filter(USER="kevin", estado=True).first()
+
+    return configuracion
+
 @admin.action(description="Descargar Receta")
 def generar_presupuesto(modeladmin, request, queryset):
-
-    
-    empresa = Configuracion.objects.filter(estado=True).first()
-
-    nombre_empresa = empresa.NOMBRE_EMPRESA
-    direccion_empresa = empresa.DIRECCION
-    telefono_empresa = empresa.TELEFONO
-    email_empresa = empresa.EMAIL
-    logo_path = empresa.LOGO.path if empresa.LOGO else None
 
     #Validacion para que seleccione solo 1 queryset
     if len(queryset) != 1:
         messages.error(request, "Seleccione solo un pedido para generar el informe.")
         return
+    
+    # Obtener el primer pedido seleccionado
+    pedido = queryset[0]
+
+    usuario = pedido.USER
+    configuracion = get_configuracion(usuario)
+
+    if configuracion:
+        nombre_empresa = configuracion.NOMBRE_EMPRESA
+        direccion_empresa = configuracion.DIRECCION
+        telefono_empresa = configuracion.TELEFONO
+        email_empresa = configuracion.EMAIL
+        logo_path = configuracion.LOGO.path if configuracion.LOGO else None
+
     
     #Capturo la ruta actual para la ruta del logo
     current_directory = os.getcwd()
@@ -46,8 +61,8 @@ def generar_presupuesto(modeladmin, request, queryset):
         # Tamaño y posición del logo
         logo_width = 150  # Ancho del logo
         logo_height = 150 # Alto del logo
-        logo_x = 450  # Posición horizontal del logo
-        logo_y = 850  # Posición vertical del logo
+        logo_x = 410  # Posición horizontal del logo
+        logo_y = 820  # Posición vertical del logo
 
         # Agregar el logo al lienzo PDF
         logo_image = ImageReader(logo_path)
@@ -77,15 +92,39 @@ def generar_presupuesto(modeladmin, request, queryset):
     # Bloque entrega
     p.setFillColorRGB(0, 0, 0)  # Color de texto negro
     p.setFont("Helvetica-Bold", 12)  # Fuente en negrita y tamaño 14
-    p.drawString(x, y, f"DETALLE DE LA RECETA")
+    p.drawString(x, y, f"DATOS DE LA RECETA")
     y -= 20
 
     p.setFont("Helvetica-Bold", 10)
     p.drawString(x, y, "Receta #: ")
     p.setFont("Helvetica", 10)  # Fuente normal
     codigo_str = str(pedido.CODIGO)
-    p.drawString(130, y, codigo_str.zfill(4))
-    y -= 20
+    p.drawString(100, y, codigo_str.zfill(4))
+    y -= 15
+
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(x, y, "Porciones por receta: ")
+    p.setFont("Helvetica", 10)  # Fuente normal
+    codigo_str = str(pedido.PORCIONES)
+    p.drawString(160, y, codigo_str)
+    y -= 15
+
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(x, y, "Costo Porcion: $ ")
+    p.setFont("Helvetica", 10)  # Fuente normal
+    Calculo = pedido.COSTO_FINAL / pedido.PORCIONES
+    codigo_str = str("{:,.2f}".format(Calculo))
+    p.drawString(160, y, codigo_str)
+    y -= 15
+
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(x, y, "Costo Total: $ ")
+    p.setFont("Helvetica", 10)  # Fuente normal
+    codigo_str = str("{:,.2f}".format(pedido.COSTO_FINAL))
+    p.drawString(130, y, codigo_str)
+    y -= 25
+
+
 
     # Dividir el detalle en líneas utilizando "#"
     detalle = str(pedido.DETALLE)
