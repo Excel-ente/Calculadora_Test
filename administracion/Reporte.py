@@ -25,9 +25,19 @@ def generar_presupuesto(modeladmin, request, queryset):
     if len(queryset) != 1:
         messages.error(request, "Seleccione solo un pedido para generar el informe.")
         return
+      
+    #Capturo la ruta actual para la ruta del logo
+    current_directory = os.getcwd()
+
+    logo_path = os.path.join(current_directory, 'static/logo.png')
     
     # Obtener el primer pedido seleccionado
     pedido = queryset[0]
+    nombre_empresa = "EXCEL-ENTE"
+    direccion_empresa = "Calculadora de costos 2.1v"
+    telefono_empresa = "Fecha de actualizacion 27/08/2023"
+    email_empresa = "turkienich@excel-ente.net"
+    
 
     usuario = pedido.USER
     configuracion = get_configuracion(usuario)
@@ -39,23 +49,9 @@ def generar_presupuesto(modeladmin, request, queryset):
         telefono_empresa = configuracion.TELEFONO
         email_empresa = configuracion.EMAIL
 
-        if not nombre_empresa:
-            nombre_empresa = "Detalle de Receta"
-
-        if not direccion_empresa:
-            direccion_empresa = ""
-
-        if not telefono_empresa:
-            telefono_empresa = ""
-        
-        if not email_empresa:
-            email_empresa = ""
-        
         logo_path = configuracion.LOGO.path if configuracion.LOGO else None
 
-    
-    #Capturo la ruta actual para la ruta del logo
-    current_directory = os.getcwd()
+  
 
     # Establecer el idioma en español
     locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
@@ -126,7 +122,7 @@ def generar_presupuesto(modeladmin, request, queryset):
     p.setFont("Helvetica-Bold", 10)
     p.drawString(x, y, "Costo Porcion: $ ")
     p.setFont("Helvetica", 10)  # Fuente normal
-    Calculo = pedido.COSTO_FINAL / pedido.PORCIONES
+    Calculo = pedido.costo_porcion()
     codigo_str = str("{:,.2f}".format(Calculo))
     p.drawString(160, y, codigo_str)
     y -= 15
@@ -134,7 +130,7 @@ def generar_presupuesto(modeladmin, request, queryset):
     p.setFont("Helvetica-Bold", 10)
     p.drawString(x, y, "Costo Total: $ ")
     p.setFont("Helvetica", 10)  # Fuente normal
-    codigo_str = str("{:,.2f}".format(pedido.COSTO_FINAL))
+    codigo_str = str("{:,.2f}".format(pedido.costo_receta()))
     p.drawString(130, y, codigo_str)
     y -= 25
 
@@ -156,23 +152,16 @@ def generar_presupuesto(modeladmin, request, queryset):
 
     for linea in lineas:
 
-        if contador == 0:
+        largo = len(linea)
 
-            largo = len(linea)
-
-            if largo > 1:
-                linea = linea[:largo-1]
-                p.drawString(posicion_x, y, linea)
-                y -= 20
-
-        else:
-
-            largo = len(linea)
+        if largo > 1:
             linea = linea[:largo-1]
             p.drawString(posicion_x, y, linea)
             y -= 20
-            
-            contador += 1
+        else:
+            p.drawString(posicion_x, y, "Sin Adicionales.")
+            y -= 20
+
 
     # Obtener los gastos adicionales de la receta
     gastos_adicionales = pedido.adicionalreceta_set.all()

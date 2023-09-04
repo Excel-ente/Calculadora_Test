@@ -1,4 +1,5 @@
-from administracion.models import Receta
+from django.forms import ValidationError
+from fabrica.models import Receta
 from django.contrib import admin
 from django.contrib import messages
 
@@ -21,3 +22,19 @@ def Actualizar(modeladmin, request, queryset):
         receta.save()
             
     messages.success(request, "Recetas seleccionadas actualizadas con éxito.")
+
+@admin.action(description="Controlar")
+def Autorizar(modeladmin, request, queryset):
+
+    contador = 0 
+
+    for compra in queryset:
+        if compra.ESTADO != "Controlada":
+            compra.ESTADO = "Controlada"
+            compra.save()
+            contador += 1
+        else:
+            messages.info(request, "La compra seleccionada ya se encuentra controlada.")
+    
+    if contador > 0:
+        messages.success(request, "Compra controlada correctamente.")
